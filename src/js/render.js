@@ -110,11 +110,35 @@ function drawGhost( ctx, g, color ) {
   ctx.beginPath();
   ctx.arc( cx, cy - 1, r, Math.PI, 0, false ); // cabeza
   ctx.lineTo( right, bottom );
-  // falda ondulada (3 picos)
-  ctx.lineTo( right - r * 0.66, bottom - 4 );
-  ctx.lineTo( cx, bottom );
-  ctx.lineTo( left + r * 0.66, bottom - 4 );
-  ctx.lineTo( left, bottom );
+
+  // Falda/contorno distinto segun el tipo de comportamiento.
+  if ( g.kind === 'hunter' ) {
+    // picos clasicos (3)
+    ctx.lineTo( right - r * 0.66, bottom - 4 );
+    ctx.lineTo( cx, bottom );
+    ctx.lineTo( left + r * 0.66, bottom - 4 );
+    ctx.lineTo( left, bottom );
+  } else if ( g.kind === 'random' ) {
+    // curva suave
+    ctx.quadraticCurveTo( cx, bottom - r * 0.7, left, bottom );
+  } else if ( g.kind === 'patroller' ) {
+    // picos grandes
+    ctx.lineTo( right - r * 0.5, bottom - 6 );
+    ctx.lineTo( cx, bottom );
+    ctx.lineTo( left + r * 0.5, bottom - 6 );
+    ctx.lineTo( left, bottom );
+  } else if ( g.kind === 'ambusher' ) {
+    // forma puntiaguda: pico central largo
+    ctx.lineTo( right - r * 0.5, bottom - 4 );
+    ctx.lineTo( cx, bottom + 3 );
+    ctx.lineTo( left + r * 0.5, bottom - 4 );
+    ctx.lineTo( left, bottom );
+  } else {
+    ctx.lineTo( right - r * 0.66, bottom - 4 );
+    ctx.lineTo( cx, bottom );
+    ctx.lineTo( left + r * 0.66, bottom - 4 );
+    ctx.lineTo( left, bottom );
+  }
   ctx.closePath();
   ctx.fill();
 
