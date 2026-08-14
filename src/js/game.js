@@ -37,6 +37,14 @@ function createGame() {
   let dots = 0;
   for ( const row of grid ) for ( const v of row ) if ( v === 2 ) dots++;
 
+  // Barajar los tipos entre las posiciones de inicio (una vez por partida).
+  const starts = GHOST_STARTS.slice();
+  const kinds = starts.map( ( s ) => s.kind );
+  for ( let i = kinds.length - 1; i > 0; i-- ) {
+    const j = Math.floor( Math.random() * ( i + 1 ) );
+    [ kinds[ i ], kinds[ j ] ] = [ kinds[ j ], kinds[ i ] ];
+  }
+
   return {
     state: 'start',
     score: 0,
@@ -50,12 +58,12 @@ function createGame() {
       nextDir: null,
       speed: PACMAN_SPEED,
     },
-    ghosts: GHOST_STARTS.map( ( g ) => ( {
-      x: g.x,
-      y: g.y,
+    ghosts: starts.map( ( s, i ) => ( {
+      x: s.x,
+      y: s.y,
       dir: 'up',
       speed: GHOST_SPEED,
-      kind: g.kind,
+      kind: kinds[ i ],
       patrolIndex: 0,
     } ) ),
   };
