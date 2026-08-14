@@ -13,6 +13,20 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+// Tipos de fantasma: nombre y color.
+const GHOST_TYPE_INFO = {
+  hunter: { name: 'Blinky', color: '#ff0000' },
+  random: { name: 'Clyde', color: '#ffb852' },
+  patroller: { name: 'Pinky', color: '#ffb8ff' },
+  ambusher: { name: 'Inky', color: '#00ffff' },
+};
+
+// Camino de patrulla del patroller, en celdas (x, y) transitables, en loop.
+const PATROL_PATH = [
+  { x: 1, y: 1 }, { x: 6, y: 1 },
+  { x: 6, y: 5 }, { x: 1, y: 5 },
+];
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -42,6 +56,7 @@ function createGame() {
       dir: 'up',
       speed: GHOST_SPEED,
       kind: g.kind,
+      patrolIndex: 0,
     } ) ),
   };
 }
@@ -197,3 +212,4 @@ function update( game ) {
 window.createGame = createGame;
 window.update = update;
 window.DIRS = DIRS;
+window.GHOST_TYPE_INFO = GHOST_TYPE_INFO;
