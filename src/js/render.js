@@ -156,6 +156,14 @@ function drawGhost( ctx, g, color ) {
     ctx.arc( cx + off + ex, cy - 1 + ey, 1.5, 0, Math.PI * 2 );
     ctx.fill();
   }
+
+  // Nombre del fantasma sobre el cuerpo.
+  const info = GHOST_TYPE_INFO[ g.kind ];
+  ctx.fillStyle = color;
+  ctx.font = '8px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText( info.name, cx, top - 2 );
 }
 
 function drawHUD( ctx, game, W ) {
