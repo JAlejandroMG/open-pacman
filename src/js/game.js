@@ -125,6 +125,23 @@ function movePacman( game ) {
   wrapTunnel( p, width );
 }
 
+// Direccion de `choices` que mas acerca a la celda objetivo (Manhattan).
+function bestDirTo( choices, tx, ty, x, y ) {
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = x + d.x;
+    const ny = y + d.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  return best;
+}
+
 function decideGhost( game, g ) {
   const grid = game.grid;
   const p = game.pacman;
@@ -138,19 +155,15 @@ function decideGhost( game, g ) {
   if ( g.kind === 'hunter' ) {
     const px = Math.round( p.x );
     const py = Math.round( p.y );
-    let best = choices[ 0 ];
-    let bestDist = Infinity;
-    for ( const dir of choices ) {
-      const d = DIRS[ dir ];
-      const nx = g.x + d.x;
-      const ny = g.y + d.y;
-      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
-      if ( dist < bestDist ) {
-        bestDist = dist;
-        best = dir;
-      }
+    g.dir = bestDirTo( choices, px, py, g.x, g.y );
+  } else if ( g.kind === 'patroller' ) {
+    // Avanzar al siguiente punto del camino al alcanzar el actual.
+    const target = PATROL_PATH[ g.patrolIndex ];
+    if ( Math.round( g.x ) === target.x && Math.round( g.y ) === target.y ) {
+      g.patrolIndex = ( g.patrolIndex + 1 ) % PATROL_PATH.length;
     }
-    g.dir = best;
+    const next = PATROL_PATH[ g.patrolIndex ];
+    g.dir = bestDirTo( choices, next.x, next.y, g.x, g.y );
   } else {
     g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
