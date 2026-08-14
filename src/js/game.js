@@ -13,6 +13,16 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+// Salida secuencial de la pen.
+const PEN_EXIT_INTERVAL = 60; // frames entre cada salida (1 s a 60 fps)
+const GHOST_PEN_POSITIONS = [
+  { x: 13, y: 14 },
+  { x: 14, y: 14 },
+  { x: 13, y: 15 },
+  { x: 14, y: 15 },
+];
+const PEN_EXIT_TARGET = { y: 11 }; // celda donde el fantasma termina la animacion
+
 // Tipos de fantasma: nombre y color.
 const GHOST_TYPE_INFO = {
   hunter: { name: 'Blinky', color: '#ff0000' },
@@ -65,8 +75,23 @@ function createGame() {
       speed: GHOST_SPEED,
       kind: kinds[ i ],
       patrolIndex: 0,
+      inPen: true,
+      exitingPen: false,
     } ) ),
+    penQueue: [ 0, 1, 2, 3 ],
+    penTimer: PEN_EXIT_INTERVAL,
+    penExitIndex: 0,
   };
+}
+
+// Saca el primer fantasma de la cola de salida y comienza su animacion.
+function releaseNextGhost( game ) {
+  const idx = game.penQueue.shift();
+  if ( idx === undefined ) return;
+  const g = game.ghosts[ idx ];
+  g.inPen = false;
+  g.exitingPen = true;
+  game.penTimer = 0;
 }
 
 function aligned( v ) {
@@ -227,6 +252,12 @@ function collides( a, b ) {
 }
 
 function update( game ) {
+  // Salida secuencial de la pen.
+  if ( game.penQueue.length > 0 ) {
+    game.penTimer++;
+    if ( game.penTimer >= PEN_EXIT_INTERVAL ) releaseNextGhost( game );
+  }
+
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
