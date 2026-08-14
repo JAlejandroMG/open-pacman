@@ -164,6 +164,21 @@ function decideGhost( game, g ) {
     }
     const next = PATROL_PATH[ g.patrolIndex ];
     g.dir = bestDirTo( choices, next.x, next.y, g.x, g.y );
+  } else if ( g.kind === 'ambusher' ) {
+    // Celda futura de Pacman: hasta 3 celdas hacia delante sin cruzar muros.
+    let tx = Math.round( p.x );
+    let ty = Math.round( p.y );
+    for ( let i = 0; i < 3; i++ ) {
+      if ( !canMove( grid, tx, ty, p.dir, 'pacman' ) ) break;
+      tx += DIRS[ p.dir ].x;
+      ty += DIRS[ p.dir ].y;
+      // Tunel: envolver para que el objetivo quede dentro del laberinto.
+      if ( ty === TUNNEL_ROW ) {
+        if ( tx < 0 ) tx += grid[ 0 ].length;
+        else if ( tx >= grid[ 0 ].length ) tx -= grid[ 0 ].length;
+      }
+    }
+    g.dir = bestDirTo( choices, tx, ty, g.x, g.y );
   } else {
     g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
