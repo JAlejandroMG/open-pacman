@@ -110,11 +110,35 @@ function drawGhost( ctx, g, color ) {
   ctx.beginPath();
   ctx.arc( cx, cy - 1, r, Math.PI, 0, false ); // cabeza
   ctx.lineTo( right, bottom );
-  // falda ondulada (3 picos)
-  ctx.lineTo( right - r * 0.66, bottom - 4 );
-  ctx.lineTo( cx, bottom );
-  ctx.lineTo( left + r * 0.66, bottom - 4 );
-  ctx.lineTo( left, bottom );
+
+  // Falda/contorno distinto segun el tipo de comportamiento.
+  if ( g.kind === 'hunter' ) {
+    // picos clasicos (3)
+    ctx.lineTo( right - r * 0.66, bottom - 4 );
+    ctx.lineTo( cx, bottom );
+    ctx.lineTo( left + r * 0.66, bottom - 4 );
+    ctx.lineTo( left, bottom );
+  } else if ( g.kind === 'random' ) {
+    // curva suave
+    ctx.quadraticCurveTo( cx, bottom - r * 0.7, left, bottom );
+  } else if ( g.kind === 'patroller' ) {
+    // picos grandes
+    ctx.lineTo( right - r * 0.5, bottom - 6 );
+    ctx.lineTo( cx, bottom );
+    ctx.lineTo( left + r * 0.5, bottom - 6 );
+    ctx.lineTo( left, bottom );
+  } else if ( g.kind === 'ambusher' ) {
+    // forma puntiaguda: pico central largo
+    ctx.lineTo( right - r * 0.5, bottom - 4 );
+    ctx.lineTo( cx, bottom + 3 );
+    ctx.lineTo( left + r * 0.5, bottom - 4 );
+    ctx.lineTo( left, bottom );
+  } else {
+    ctx.lineTo( right - r * 0.66, bottom - 4 );
+    ctx.lineTo( cx, bottom );
+    ctx.lineTo( left + r * 0.66, bottom - 4 );
+    ctx.lineTo( left, bottom );
+  }
   ctx.closePath();
   ctx.fill();
 
@@ -132,6 +156,14 @@ function drawGhost( ctx, g, color ) {
     ctx.arc( cx + off + ex, cy - 1 + ey, 1.5, 0, Math.PI * 2 );
     ctx.fill();
   }
+
+  // Nombre del fantasma sobre el cuerpo.
+  const info = GHOST_TYPE_INFO[ g.kind ];
+  ctx.fillStyle = color;
+  ctx.font = '8px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText( info.name, cx, top - 2 );
 }
 
 function drawHUD( ctx, game, W ) {
@@ -144,10 +176,9 @@ function drawHUD( ctx, game, W ) {
   ctx.fillText( 'VIDAS ' + game.lives, W * TILE - 8, 4 );
 }
 
-const GHOST_COLORS = [ '#ff0000', '#00ffff', '#ffb8ff', '#ffb852' ];
-
 function draw( ctx, game, frame ) {
   const grid = game.grid;
+
   const W = grid[ 0 ].length;
   const H = grid.length;
 
@@ -158,7 +189,10 @@ function draw( ctx, game, frame ) {
   drawDoor( ctx, grid );
   drawDots( ctx, grid );
   drawPacman( ctx, game.pacman, frame );
-  game.ghosts.forEach( ( g, i ) => drawGhost( ctx, g, GHOST_COLORS[ i ] || '#ff0000' ) );
+  game.ghosts.forEach( ( g ) => {
+    const info = GHOST_TYPE_INFO[ g.kind ];
+    drawGhost( ctx, g, info.color );
+  } );
   drawHUD( ctx, game, W );
 }
 

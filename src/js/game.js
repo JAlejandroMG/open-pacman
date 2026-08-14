@@ -13,6 +13,20 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+// Tipos de fantasma: nombre y color.
+const GHOST_TYPE_INFO = {
+  hunter: { name: 'Blinky', color: '#ff0000' },
+  random: { name: 'Clyde', color: '#ffb852' },
+  patroller: { name: 'Pinky', color: '#ffb8ff' },
+  ambusher: { name: 'Inky', color: '#00ffff' },
+};
+
+// Camino de patrulla del patroller, en celdas (x, y) transitables, en loop.
+const PATROL_PATH = [
+  { x: 1, y: 1 }, { x: 6, y: 1 },
+  { x: 6, y: 5 }, { x: 1, y: 5 },
+];
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -22,6 +36,14 @@ function createGame() {
 
   let dots = 0;
   for ( const row of grid ) for ( const v of row ) if ( v === 2 ) dots++;
+
+  // Barajar los tipos entre las posiciones de inicio (una vez por partida).
+  const starts = GHOST_STARTS.slice();
+  const kinds = starts.map( ( s ) => s.kind );
+  for ( let i = kinds.length - 1; i > 0; i-- ) {
+    const j = Math.floor( Math.random() * ( i + 1 ) );
+    [ kinds[ i ], kinds[ j ] ] = [ kinds[ j ], kinds[ i ] ];
+  }
 
   return {
     state: 'start',
@@ -36,12 +58,13 @@ function createGame() {
       nextDir: null,
       speed: PACMAN_SPEED,
     },
-    ghosts: GHOST_STARTS.map( ( g ) => ( {
-      x: g.x,
-      y: g.y,
+    ghosts: starts.map( ( s, i ) => ( {
+      x: s.x,
+      y: s.y,
       dir: 'up',
       speed: GHOST_SPEED,
-      kind: g.kind,
+      kind: kinds[ i ],
+      patrolIndex: 0,
     } ) ),
   };
 }
@@ -110,6 +133,23 @@ function movePacman( game ) {
   wrapTunnel( p, width );
 }
 
+// Direccion de `choices` que mas acerca a la celda objetivo (Manhattan).
+function bestDirTo( choices, tx, ty, x, y ) {
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = x + d.x;
+    const ny = y + d.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  return best;
+}
+
 function decideGhost( game, g ) {
   const grid = game.grid;
   const p = game.pacman;
@@ -123,19 +163,30 @@ function decideGhost( game, g ) {
   if ( g.kind === 'hunter' ) {
     const px = Math.round( p.x );
     const py = Math.round( p.y );
-    let best = choices[ 0 ];
-    let bestDist = Infinity;
-    for ( const dir of choices ) {
-      const d = DIRS[ dir ];
-      const nx = g.x + d.x;
-      const ny = g.y + d.y;
-      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
-      if ( dist < bestDist ) {
-        bestDist = dist;
-        best = dir;
+    g.dir = bestDirTo( choices, px, py, g.x, g.y );
+  } else if ( g.kind === 'patroller' ) {
+    // Avanzar al siguiente punto del camino al alcanzar el actual.
+    const target = PATROL_PATH[ g.patrolIndex ];
+    if ( Math.round( g.x ) === target.x && Math.round( g.y ) === target.y ) {
+      g.patrolIndex = ( g.patrolIndex + 1 ) % PATROL_PATH.length;
+    }
+    const next = PATROL_PATH[ g.patrolIndex ];
+    g.dir = bestDirTo( choices, next.x, next.y, g.x, g.y );
+  } else if ( g.kind === 'ambusher' ) {
+    // Celda futura de Pacman: hasta 3 celdas hacia delante sin cruzar muros.
+    let tx = Math.round( p.x );
+    let ty = Math.round( p.y );
+    for ( let i = 0; i < 3; i++ ) {
+      if ( !canMove( grid, tx, ty, p.dir, 'pacman' ) ) break;
+      tx += DIRS[ p.dir ].x;
+      ty += DIRS[ p.dir ].y;
+      // Tunel: envolver para que el objetivo quede dentro del laberinto.
+      if ( ty === TUNNEL_ROW ) {
+        if ( tx < 0 ) tx += grid[ 0 ].length;
+        else if ( tx >= grid[ 0 ].length ) tx -= grid[ 0 ].length;
       }
     }
-    g.dir = best;
+    g.dir = bestDirTo( choices, tx, ty, g.x, g.y );
   } else {
     g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
@@ -197,3 +248,4 @@ function update( game ) {
 window.createGame = createGame;
 window.update = update;
 window.DIRS = DIRS;
+window.GHOST_TYPE_INFO = GHOST_TYPE_INFO;
