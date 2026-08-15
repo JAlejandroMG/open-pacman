@@ -21,7 +21,9 @@ const GHOST_PEN_POSITIONS = [
   { x: 13, y: 15 },
   { x: 14, y: 15 },
 ];
-const PEN_EXIT_TARGET = { y: 11 }; // celda donde el fantasma termina la animacion
+// Celda donde el fantasma termina la animacion. y=11 es transitable (fila con
+// dots) y desde ahi el fantasma tiene salida lateral (x=9-18) al laberinto.
+const PEN_EXIT_TARGET = { y: 11 };
 
 // Tipos de fantasma: nombre y color.
 const GHOST_TYPE_INFO = {
@@ -80,7 +82,6 @@ function createGame() {
     } ) ),
     penQueue: [ 0, 1, 2, 3 ],
     penTimer: PEN_EXIT_INTERVAL,
-    penExitIndex: 0,
   };
 }
 
@@ -91,6 +92,28 @@ function releaseNextGhost( game ) {
   const g = game.ghosts[ idx ];
   g.inPen = false;
   g.exitingPen = true;
+  game.penTimer = 0;
+}
+
+// Reintegra un fantasma eliminado a la pen y lo encola para salir de nuevo.
+function requeueGhost( game, i ) {
+  const g = game.ghosts[ i ];
+  // Primera posicion de la pen libre (sin otro fantasma en pen encima).
+  let pos = GHOST_PEN_POSITIONS[ 0 ];
+  for ( const p of GHOST_PEN_POSITIONS ) {
+    const occupied = game.ghosts.some( ( o ) =>
+      o !== g && o.inPen && Math.round( o.x ) === p.x && Math.round( o.y ) === p.y
+    );
+    if ( !occupied ) {
+      pos = p;
+      break;
+    }
+  }
+  g.x = pos.x;
+  g.y = pos.y;
+  g.inPen = true;
+  g.exitingPen = false;
+  game.penQueue.push( i );
   game.penTimer = 0;
 }
 
@@ -218,8 +241,21 @@ function decideGhost( game, g ) {
 }
 
 function moveGhost( game, g ) {
+  // Animacion de salida de la pen: subida vertical sin IA.
+  if ( g.exitingPen ) {
+    g.y -= g.speed;
+    if ( g.y <= PEN_EXIT_TARGET.y ) {
+      g.y = PEN_EXIT_TARGET.y;
+      g.exitingPen = false;
+    }
+    return;
+  }
+
   const grid = game.grid;
   const width = grid[ 0 ].length;
+
+  // En cola de salida: no se mueve ni decide direccion.
+  if ( g.inPen && !g.exitingPen ) return;
 
   if ( aligned( g.x ) && aligned( g.y ) ) {
     g.x = Math.round( g.x );
@@ -241,10 +277,14 @@ function resetPositions( game ) {
   p.dir = 'left';
   p.nextDir = null;
   game.ghosts.forEach( ( g, i ) => {
-    g.x = GHOST_STARTS[ i ].x;
-    g.y = GHOST_STARTS[ i ].y;
+    g.x = GHOST_PEN_POSITIONS[ i ].x;
+    g.y = GHOST_PEN_POSITIONS[ i ].y;
     g.dir = 'up';
+    g.inPen = true;
+    g.exitingPen = false;
   } );
+  game.penQueue = [ 0, 1, 2, 3 ];
+  game.penTimer = PEN_EXIT_INTERVAL;
 }
 
 function collides( a, b ) {

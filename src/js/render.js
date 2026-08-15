@@ -190,6 +190,8 @@ function draw( ctx, game, frame ) {
   drawDots( ctx, grid );
   drawPacman( ctx, game.pacman, frame );
   game.ghosts.forEach( ( g ) => {
+    // En cola de salida (inPen, sin animar): no se dibuja.
+    if ( g.inPen && !g.exitingPen ) return;
     const info = GHOST_TYPE_INFO[ g.kind ];
     drawGhost( ctx, g, info.color );
   } );
