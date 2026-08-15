@@ -1,6 +1,6 @@
 # SPEC 01 — Cuatro fantasmas con comportamientos únicos
 
-> **Status:** Aprobado
+> **Status:** Implementado
 > **Depends on:** Ninguno
 > **Date:** 2026-08-12
 > **Objective:** Añadir 4 fantasmas al juego, cada uno con nombre, color, forma visual y comportamiento de movimiento diferente, actuando de forma independiente.
