@@ -5,6 +5,7 @@ const TILE = 20;
 const WALL_COLOR = '#2121ff';
 const DOOR_COLOR = '#ffb8ff';
 const DOT_COLOR = '#ffb897';
+const FRIGHTENED_COLOR = '#2121de';
 
 function cellCenter( x, y ) {
   return { cx: x * TILE + TILE / 2, cy: y * TILE + TILE / 2 };
@@ -79,6 +80,21 @@ function drawDots( ctx, grid ) {
   }
 }
 
+// Power pellets: circulo grande blanco con parpadeo (alterna cada 15 frames).
+function drawPowerPellets( ctx, grid, frame ) {
+  if ( Math.floor( frame / 15 ) % 2 === 1 ) return;
+  ctx.fillStyle = '#ffffff';
+  for ( let y = 0; y < grid.length; y++ ) {
+    for ( let x = 0; x < grid[ 0 ].length; x++ ) {
+      if ( grid[ y ][ x ] !== 4 ) continue;
+      const { cx, cy } = cellCenter( x, y );
+      ctx.beginPath();
+      ctx.arc( cx, cy, 4, 0, Math.PI * 2 );
+      ctx.fill();
+    }
+  }
+}
+
 function drawPacman( ctx, p, frame ) {
   const { cx, cy } = cellCenter( p.x, p.y );
   let rot = 0;
@@ -98,7 +114,7 @@ function drawPacman( ctx, p, frame ) {
   ctx.fill();
 }
 
-function drawGhost( ctx, g, color ) {
+function drawGhost( ctx, g, color, frightened ) {
   const { cx, cy } = cellCenter( g.x, g.y );
   const r = TILE / 2 - 1;
   const top = cy - r;
@@ -108,6 +124,29 @@ function drawGhost( ctx, g, color ) {
 
   ctx.fillStyle = color;
   ctx.beginPath();
+
+  if ( frightened ) {
+    // Forma invertida: domo abajo y boca apuntando hacia arriba.
+    ctx.arc( cx, cy + 1, r, Math.PI, 0, true );
+    ctx.lineTo( left, top );
+    ctx.lineTo( cx, top - 4 );
+    ctx.lineTo( right, top );
+    ctx.closePath();
+    ctx.fill();
+    // Ojos fijos (sin direccion) durante el modo.
+    for ( const off of [ -3.5, 3.5 ] ) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc( cx + off, cy + 1, 3, 0, Math.PI * 2 );
+      ctx.fill();
+      ctx.fillStyle = '#0000bb';
+      ctx.beginPath();
+      ctx.arc( cx + off, cy + 1, 1.5, 0, Math.PI * 2 );
+      ctx.fill();
+    }
+    return; // sin nombre durante el modo
+  }
+
   ctx.arc( cx, cy - 1, r, Math.PI, 0, false ); // cabeza
   ctx.lineTo( right, bottom );
 
@@ -174,6 +213,17 @@ function drawHUD( ctx, game, W ) {
   ctx.fillText( 'SCORE ' + game.score, 8, 4 );
   ctx.textAlign = 'right';
   ctx.fillText( 'VIDAS ' + game.lives, W * TILE - 8, 4 );
+
+  // Barra de poder: se vacia de izquierda a derecha segun el tiempo restante.
+  if ( game.powerTimer > 0 ) {
+    const pad = 8;
+    const barW = W * TILE - pad * 2;
+    const frac = game.powerTimer / POWER_DURATION;
+    ctx.fillStyle = '#005f6e';
+    ctx.fillRect( pad, 22, barW, 4 );
+    ctx.fillStyle = '#00ffff';
+    ctx.fillRect( pad, 22, barW * frac, 4 );
+  }
 }
 
 function draw( ctx, game, frame ) {
@@ -188,14 +238,26 @@ function draw( ctx, game, frame ) {
   drawWalls( ctx, grid );
   drawDoor( ctx, grid );
   drawDots( ctx, grid );
+  drawPowerPellets( ctx, grid, frame );
   drawPacman( ctx, game.pacman, frame );
   game.ghosts.forEach( ( g ) => {
     // En cola de salida (inPen, sin animar): no se dibuja.
     if ( g.inPen && !g.exitingPen ) return;
     const info = GHOST_TYPE_INFO[ g.kind ];
-    drawGhost( ctx, g, info.color );
+    const frightened = game.powerTimer > 0;
+    drawGhost( ctx, g, frightened ? FRIGHTENED_COLOR : info.color, frightened );
   } );
   drawHUD( ctx, game, W );
+
+  // Puntos al comer un fantasma: '200' breve sobre la posicion de la colision.
+  if ( game.eatFx ) {
+    const { cx, cy } = cellCenter( game.eatFx.x, game.eatFx.y );
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText( '200', cx, cy );
+  }
 }
 
 window.draw = draw;

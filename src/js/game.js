@@ -13,6 +13,18 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+// Power pellets y modo poder.
+const POWER_DURATION = 360; // frames (6 segundos a 60 fps)
+const POWER_POINTS = 200;   // puntos por fantasma comido con poder
+const POWER_PELLET_POSITIONS = [
+  { x: 1, y: 1 },   // esquina superior-izquierda
+  { x: 26, y: 1 },  // esquina superior-derecha
+  { x: 1, y: 29 },  // esquina inferior-izquierda
+  { x: 26, y: 29 }, // esquina inferior-derecha
+];
+// Duracion del texto '200' al comer un fantasma (frames).
+const EAT_FX_DURATION = 60;
+
 // Salida secuencial de la pen.
 const PEN_EXIT_INTERVAL = 60; // frames entre cada salida (1 s a 60 fps)
 const GHOST_PEN_POSITIONS = [
@@ -62,6 +74,9 @@ function createGame() {
     score: 0,
     lives: 3,
     dotsRemaining: dots,
+    powerTimer: 0,   // frames restantes de poder (0 = sin poder)
+    powerPellets: 4, // power pellets restantes en el laberinto
+    eatFx: null, // '200' sobre la posicion del fantasma comido (null si inactivo)
     grid,
     pacman: {
       x: PACMAN_START.x,
@@ -77,6 +92,7 @@ function createGame() {
       speed: GHOST_SPEED,
       kind: kinds[ i ],
       patrolIndex: 0,
+      frightened: false, // true mientras powerTimer > 0
       inPen: true,
       exitingPen: false,
     } ) ),
@@ -171,6 +187,13 @@ function movePacman( game ) {
       game.score += 10;
       game.dotsRemaining--;
     }
+    // Comer power pellet.
+    if ( grid[ p.y ][ p.x ] === 4 ) {
+      grid[ p.y ][ p.x ] = 0;
+      game.score += 10;
+      game.powerTimer = POWER_DURATION;
+      game.powerPellets--;
+    }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
   }
@@ -207,6 +230,29 @@ function decideGhost( game, g ) {
   );
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
+
+  // Modo frightened: huir de Pacman maximizando la distancia Manhattan.
+  // Reemplaza la IA normal mientras el modo esta activo. Empates: al azar.
+  if ( g.frightened ) {
+    const px = Math.round( p.x );
+    const py = Math.round( p.y );
+    let bestDist = -1;
+    let bestDirs = [];
+    for ( const dir of choices ) {
+      const d = DIRS[ dir ];
+      const nx = g.x + d.x;
+      const ny = g.y + d.y;
+      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
+      if ( dist > bestDist ) {
+        bestDist = dist;
+        bestDirs = [ dir ];
+      } else if ( dist === bestDist ) {
+        bestDirs.push( dir );
+      }
+    }
+    g.dir = bestDirs[ Math.floor( Math.random() * bestDirs.length ) ];
+    return;
+  }
 
   if ( g.kind === 'hunter' ) {
     const px = Math.round( p.x );
@@ -280,11 +326,15 @@ function resetPositions( game ) {
     g.x = GHOST_PEN_POSITIONS[ i ].x;
     g.y = GHOST_PEN_POSITIONS[ i ].y;
     g.dir = 'up';
+    g.frightened = false;
     g.inPen = true;
     g.exitingPen = false;
   } );
   game.penQueue = [ 0, 1, 2, 3 ];
   game.penTimer = PEN_EXIT_INTERVAL;
+  // Al perder una vida el poder se cancela; las power pellets comidas
+  // permanecen fuera del laberinto (no se restauran dentro del ciclo).
+  game.powerTimer = 0;
 }
 
 function collides( a, b ) {
@@ -301,19 +351,60 @@ function update( game ) {
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
-  for ( const g of game.ghosts ) {
-    if ( collides( game.pacman, g ) ) {
-      game.lives--;
-      if ( game.lives <= 0 ) {
-        game.state = 'lost';
-        return;
-      }
-      resetPositions( game );
-      break;
+  // Timer de poder: decrementa cada frame y apaga el modo al llegar a 0.
+  if ( game.powerTimer > 0 ) {
+    game.powerTimer--;
+    if ( game.powerTimer === 0 ) {
+      game.ghosts.forEach( ( g ) => ( g.frightened = false ) );
     }
   }
 
-  if ( game.dotsRemaining <= 0 ) game.state = 'won';
+  // Texto '200' al comer un fantasma: expira solo.
+  if ( game.eatFx ) {
+    game.eatFx.timer--;
+    if ( game.eatFx.timer <= 0 ) game.eatFx = null;
+  }
+
+  for ( let i = 0; i < game.ghosts.length; i++ ) {
+    const g = game.ghosts[ i ];
+    if ( !collides( game.pacman, g ) ) continue;
+    // Con poder: comer al fantasma si no esta en la pen ni saliendo de ella.
+    if ( game.powerTimer > 0 && !g.inPen && !g.exitingPen ) {
+      const fxX = g.x;
+      const fxY = g.y;
+      requeueGhost( game, i );
+      game.score += POWER_POINTS;
+      game.eatFx = { x: fxX, y: fxY, timer: EAT_FX_DURATION };
+      continue;
+    }
+    // Sin poder (o fantasma en la pen): colision normal -> perder vida.
+    game.lives--;
+    if ( game.lives <= 0 ) {
+      game.state = 'lost';
+      return;
+    }
+    resetPositions( game );
+    break;
+  }
+
+  // Reset completo del laberinto al agotar todos los dots y power pellets.
+  if ( game.dotsRemaining === 0 && game.powerPellets === 0 ) {
+    game.grid = MAZE.map( ( row ) => row.slice() );
+    game.dotsRemaining = 0;
+    for ( const row of game.grid ) for ( const v of row ) if ( v === 2 ) game.dotsRemaining++;
+    game.powerPellets = 4;
+    game.powerTimer = 0;
+    game.ghosts.forEach( ( g, i ) => {
+      g.x = GHOST_PEN_POSITIONS[ i ].x;
+      g.y = GHOST_PEN_POSITIONS[ i ].y;
+      g.dir = 'up';
+      g.frightened = false;
+      g.inPen = true;
+      g.exitingPen = false;
+    } );
+    game.penQueue = [ 0, 1, 2, 3 ];
+    game.penTimer = PEN_EXIT_INTERVAL;
+  }
 }
 
 window.createGame = createGame;

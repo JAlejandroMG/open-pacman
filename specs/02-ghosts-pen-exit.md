@@ -1,6 +1,6 @@
 # SPEC 02 — Salida secuencial de fantasmas desde la pen
 
-> **Status:** Aprobado
+> **Status:** Implementado
 > **Depends on:** SPEC 01
 > **Date:** 2026-08-14
 > **Objective:** Los 4 fantasmas arrancan dentro de la pen y salen uno por uno con 1 segundo de diferencia, con animación de subida por la puerta, reapareciendo dentro de la pen al ser eliminados y repitiendo la salida secuencial.
