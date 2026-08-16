@@ -213,6 +213,17 @@ function drawHUD( ctx, game, W ) {
   ctx.fillText( 'SCORE ' + game.score, 8, 4 );
   ctx.textAlign = 'right';
   ctx.fillText( 'VIDAS ' + game.lives, W * TILE - 8, 4 );
+
+  // Barra de poder: se vacia de izquierda a derecha segun el tiempo restante.
+  if ( game.powerTimer > 0 ) {
+    const pad = 8;
+    const barW = W * TILE - pad * 2;
+    const frac = game.powerTimer / POWER_DURATION;
+    ctx.fillStyle = '#005f6e';
+    ctx.fillRect( pad, 22, barW, 4 );
+    ctx.fillStyle = '#00ffff';
+    ctx.fillRect( pad, 22, barW * frac, 4 );
+  }
 }
 
 function draw( ctx, game, frame ) {

@@ -101,26 +101,26 @@ Cada paso deja el juego ejecutable abriendo `src/index.html`.
 - [x] Las power pellets son visibles y se distinguen de los dots normales.
 - [x] Las power pellets parpadean (efecto visual).
 - [x] Al comer una power pellet, se activa el modo poder por 6 segundos exactos.
-- [ ] Durante el modo poder, los fantasmas huyen de Pacman: eligen la dirección que maximiza la distancia Manhattan (y al azar entre las empatadas).
-- [ ] Durante el modo poder, los fantasmas cambian de color (azul oscuro o similar).
-- [ ] Durante el modo poder, la forma visual de los fantasmas cambia (boca invertida).
-- [ ] Los fantasmas en la pen (en cola o saliendo) también cambian de color en modo frightened.
+- [x] Durante el modo poder, los fantasmas huyen de Pacman: eligen la dirección que maximiza la distancia Manhattan (y al azar entre las empatadas).
+- [x] Durante el modo poder, los fantasmas cambian de color (azul oscuro o similar).
+- [x] Durante el modo poder, la forma visual de los fantasmas cambia (boca invertida).
+- [x] Los fantasmas en la pen (en cola o saliendo) también cambian de color en modo frightened.
 - [x] Durante el modo poder, Pacman puede comer fantasmas por 200 puntos cada uno.
 - [ ] Al comer un fantasma con poder, aparece "200" sobre la posición de la colisión.
 - [x] El fantasma comido reaparece en la pen y sale secuencialmente (spec 02).
-- [ ] La barra de timer de poder se muestra y se vacía en 6 segundos.
-- [ ] Al terminar los 6 segundos, los fantasmas vuelven a su color, forma y comportamiento de IA original desde su posición actual.
-- [ ] Al terminar los 6 segundos, `frightened` se pone a `false` en todos los fantasmas.
-- [ ] Al terminar los 6 segundos, la barra de timer desaparece.
+- [x] La barra de timer de poder se muestra y se vacía en 6 segundos.
+- [x] Al terminar los 6 segundos, los fantasmas vuelven a su color, forma y comportamiento de IA original desde su posición actual.
+- [x] Al terminar los 6 segundos, `frightened` se pone a `false` en todos los fantasmas.
+- [x] Al terminar los 6 segundos, la barra de timer desaparece.
 - [x] Si Pacman choca con un fantasma sin poder activo, pierde una vida (comportamiento actual).
-- [ ] Al perder una vida, `powerTimer` se restablece a 0 y `frightened` a `false` en todos los fantasmas.
+- [x] Al perder una vida, `powerTimer` se restablece a 0 y `frightened` a `false` en todos los fantasmas.
 - [x] Las power pellets comidas no se restauran al perder una vida (dentro del ciclo).
 - [x] Al perder una vida, los fantasmas vuelven a la pen y salen secuencialmente.
-- [ ] Al comer el último dot (normal o power pellet) cuando ambos se agotaron, el laberinto se restaura completo.
-- [ ] Al restaurarse el laberinto, las 4 celdas de esquina vuelven a ser power pellets.
-- [ ] Al restaurarse el laberinto, los fantasmas vuelven a la pen y salen secuencialmente.
-- [ ] Al restaurarse el laberinto, `powerTimer` se pone a 0.
-- [ ] Al restaurarse el laberinto, score y vidas se mantienen.
+- [x] Al comer el último dot (normal o power pellet) cuando ambos se agotaron, el laberinto se restaura completo.
+- [x] Al restaurarse el laberinto, las 4 celdas de esquina vuelven a ser power pellets.
+- [x] Al restaurarse el laberinto, los fantasmas vuelven a la pen y salen secuencialmente.
+- [x] Al restaurarse el laberinto, `powerTimer` se pone a 0.
+- [x] Al restaurarse el laberinto, score y vidas se mantienen.
 - [ ] La consola no muestra errores.
 
 ## Decisions
