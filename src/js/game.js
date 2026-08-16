@@ -323,11 +323,15 @@ function resetPositions( game ) {
     g.x = GHOST_PEN_POSITIONS[ i ].x;
     g.y = GHOST_PEN_POSITIONS[ i ].y;
     g.dir = 'up';
+    g.frightened = false;
     g.inPen = true;
     g.exitingPen = false;
   } );
   game.penQueue = [ 0, 1, 2, 3 ];
   game.penTimer = PEN_EXIT_INTERVAL;
+  // Al perder una vida el poder se cancela; las power pellets comidas
+  // permanecen fuera del laberinto (no se restauran dentro del ciclo).
+  game.powerTimer = 0;
 }
 
 function collides( a, b ) {
@@ -371,7 +375,24 @@ function update( game ) {
     break;
   }
 
-  if ( game.dotsRemaining <= 0 ) game.state = 'won';
+  // Reset completo del laberinto al agotar todos los dots y power pellets.
+  if ( game.dotsRemaining === 0 && game.powerPellets === 0 ) {
+    game.grid = MAZE.map( ( row ) => row.slice() );
+    game.dotsRemaining = 0;
+    for ( const row of game.grid ) for ( const v of row ) if ( v === 2 ) game.dotsRemaining++;
+    game.powerPellets = 4;
+    game.powerTimer = 0;
+    game.ghosts.forEach( ( g, i ) => {
+      g.x = GHOST_PEN_POSITIONS[ i ].x;
+      g.y = GHOST_PEN_POSITIONS[ i ].y;
+      g.dir = 'up';
+      g.frightened = false;
+      g.inPen = true;
+      g.exitingPen = false;
+    } );
+    game.penQueue = [ 0, 1, 2, 3 ];
+    game.penTimer = PEN_EXIT_INTERVAL;
+  }
 }
 
 window.createGame = createGame;
