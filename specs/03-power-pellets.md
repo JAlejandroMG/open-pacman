@@ -97,7 +97,7 @@ Cada paso deja el juego ejecutable abriendo `src/index.html`.
 
 ## Acceptance criteria
 
-- [ ] Aparecen exactamente 4 power pellets en las esquinas del laberinto.
+- [x] Aparecen exactamente 4 power pellets en las esquinas del laberinto.
 - [ ] Las power pellets son visibles y se distinguen de los dots normales.
 - [ ] Las power pellets parpadean (efecto visual).
 - [ ] Al comer una power pellet, se activa el modo poder por 6 segundos exactos.
