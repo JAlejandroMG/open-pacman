@@ -228,6 +228,29 @@ function decideGhost( game, g ) {
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
+  // Modo frightened: huir de Pacman maximizando la distancia Manhattan.
+  // Reemplaza la IA normal mientras el modo esta activo. Empates: al azar.
+  if ( g.frightened ) {
+    const px = Math.round( p.x );
+    const py = Math.round( p.y );
+    let bestDist = -1;
+    let bestDirs = [];
+    for ( const dir of choices ) {
+      const d = DIRS[ dir ];
+      const nx = g.x + d.x;
+      const ny = g.y + d.y;
+      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
+      if ( dist > bestDist ) {
+        bestDist = dist;
+        bestDirs = [ dir ];
+      } else if ( dist === bestDist ) {
+        bestDirs.push( dir );
+      }
+    }
+    g.dir = bestDirs[ Math.floor( Math.random() * bestDirs.length ) ];
+    return;
+  }
+
   if ( g.kind === 'hunter' ) {
     const px = Math.round( p.x );
     const py = Math.round( p.y );
