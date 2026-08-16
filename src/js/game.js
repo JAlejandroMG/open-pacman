@@ -352,16 +352,23 @@ function update( game ) {
     }
   }
 
-  for ( const g of game.ghosts ) {
-    if ( collides( game.pacman, g ) ) {
-      game.lives--;
-      if ( game.lives <= 0 ) {
-        game.state = 'lost';
-        return;
-      }
-      resetPositions( game );
-      break;
+  for ( let i = 0; i < game.ghosts.length; i++ ) {
+    const g = game.ghosts[ i ];
+    if ( !collides( game.pacman, g ) ) continue;
+    // Con poder: comer al fantasma si no esta en la pen ni saliendo de ella.
+    if ( game.powerTimer > 0 && !g.inPen && !g.exitingPen ) {
+      requeueGhost( game, i );
+      game.score += POWER_POINTS;
+      continue;
     }
+    // Sin poder (o fantasma en la pen): colision normal -> perder vida.
+    game.lives--;
+    if ( game.lives <= 0 ) {
+      game.state = 'lost';
+      return;
+    }
+    resetPositions( game );
+    break;
   }
 
   if ( game.dotsRemaining <= 0 ) game.state = 'won';
