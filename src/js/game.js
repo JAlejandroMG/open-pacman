@@ -321,6 +321,14 @@ function update( game ) {
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
+  // Timer de poder: decrementa cada frame y apaga el modo al llegar a 0.
+  if ( game.powerTimer > 0 ) {
+    game.powerTimer--;
+    if ( game.powerTimer === 0 ) {
+      game.ghosts.forEach( ( g ) => ( g.frightened = false ) );
+    }
+  }
+
   for ( const g of game.ghosts ) {
     if ( collides( game.pacman, g ) ) {
       game.lives--;
