@@ -13,6 +13,16 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+// Power pellets y modo poder.
+const POWER_DURATION = 360; // frames (6 segundos a 60 fps)
+const POWER_POINTS = 200;   // puntos por fantasma comido con poder
+const POWER_PELLET_POSITIONS = [
+  { x: 1, y: 1 },   // esquina superior-izquierda
+  { x: 26, y: 1 },  // esquina superior-derecha
+  { x: 1, y: 29 },  // esquina inferior-izquierda
+  { x: 26, y: 29 }, // esquina inferior-derecha
+];
+
 // Salida secuencial de la pen.
 const PEN_EXIT_INTERVAL = 60; // frames entre cada salida (1 s a 60 fps)
 const GHOST_PEN_POSITIONS = [
@@ -62,6 +72,8 @@ function createGame() {
     score: 0,
     lives: 3,
     dotsRemaining: dots,
+    powerTimer: 0,   // frames restantes de poder (0 = sin poder)
+    powerPellets: 4, // power pellets restantes en el laberinto
     grid,
     pacman: {
       x: PACMAN_START.x,
@@ -77,6 +89,7 @@ function createGame() {
       speed: GHOST_SPEED,
       kind: kinds[ i ],
       patrolIndex: 0,
+      frightened: false, // true mientras powerTimer > 0
       inPen: true,
       exitingPen: false,
     } ) ),
