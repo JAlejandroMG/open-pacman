@@ -1,6 +1,6 @@
 # SPEC 03 — Power pellets para comer fantasmas
 
-> **Status:** Aprobado
+> **Status:** Implementado
 > **Depends on:** SPEC 01, SPEC 02
 > **Date:** 2026-08-14
 > **Objective:** Agregar 4 power pellets en las esquinas del laberinto que al ser comidas activan durante 6 segundos un modo en el que los fantasmas huyen de Pacman y pueden ser comidos, reapareciendo en la pen, y al comer el último dot el laberinto se restaura completo.
