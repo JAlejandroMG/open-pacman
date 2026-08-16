@@ -106,7 +106,7 @@ Cada paso deja el juego ejecutable abriendo `src/index.html`.
 - [x] Durante el modo poder, la forma visual de los fantasmas cambia (boca invertida).
 - [x] Los fantasmas en la pen (en cola o saliendo) también cambian de color en modo frightened.
 - [x] Durante el modo poder, Pacman puede comer fantasmas por 200 puntos cada uno.
-- [ ] Al comer un fantasma con poder, aparece "200" sobre la posición de la colisión.
+- [x] Al comer un fantasma con poder, aparece "200" sobre la posición de la colisión.
 - [x] El fantasma comido reaparece en la pen y sale secuencialmente (spec 02).
 - [x] La barra de timer de poder se muestra y se vacía en 6 segundos.
 - [x] Al terminar los 6 segundos, los fantasmas vuelven a su color, forma y comportamiento de IA original desde su posición actual.
@@ -121,7 +121,7 @@ Cada paso deja el juego ejecutable abriendo `src/index.html`.
 - [x] Al restaurarse el laberinto, los fantasmas vuelven a la pen y salen secuencialmente.
 - [x] Al restaurarse el laberinto, `powerTimer` se pone a 0.
 - [x] Al restaurarse el laberinto, score y vidas se mantienen.
-- [ ] La consola no muestra errores.
+- [x] La consola no muestra errores.
 
 ## Decisions
 

@@ -22,6 +22,8 @@ const POWER_PELLET_POSITIONS = [
   { x: 1, y: 29 },  // esquina inferior-izquierda
   { x: 26, y: 29 }, // esquina inferior-derecha
 ];
+// Duracion del texto '200' al comer un fantasma (frames).
+const EAT_FX_DURATION = 60;
 
 // Salida secuencial de la pen.
 const PEN_EXIT_INTERVAL = 60; // frames entre cada salida (1 s a 60 fps)
@@ -74,6 +76,7 @@ function createGame() {
     dotsRemaining: dots,
     powerTimer: 0,   // frames restantes de poder (0 = sin poder)
     powerPellets: 4, // power pellets restantes en el laberinto
+    eatFx: null, // '200' sobre la posicion del fantasma comido (null si inactivo)
     grid,
     pacman: {
       x: PACMAN_START.x,
@@ -356,13 +359,22 @@ function update( game ) {
     }
   }
 
+  // Texto '200' al comer un fantasma: expira solo.
+  if ( game.eatFx ) {
+    game.eatFx.timer--;
+    if ( game.eatFx.timer <= 0 ) game.eatFx = null;
+  }
+
   for ( let i = 0; i < game.ghosts.length; i++ ) {
     const g = game.ghosts[ i ];
     if ( !collides( game.pacman, g ) ) continue;
     // Con poder: comer al fantasma si no esta en la pen ni saliendo de ella.
     if ( game.powerTimer > 0 && !g.inPen && !g.exitingPen ) {
+      const fxX = g.x;
+      const fxY = g.y;
       requeueGhost( game, i );
       game.score += POWER_POINTS;
+      game.eatFx = { x: fxX, y: fxY, timer: EAT_FX_DURATION };
       continue;
     }
     // Sin poder (o fantasma en la pen): colision normal -> perder vida.

@@ -248,6 +248,16 @@ function draw( ctx, game, frame ) {
     drawGhost( ctx, g, frightened ? FRIGHTENED_COLOR : info.color, frightened );
   } );
   drawHUD( ctx, game, W );
+
+  // Puntos al comer un fantasma: '200' breve sobre la posicion de la colision.
+  if ( game.eatFx ) {
+    const { cx, cy } = cellCenter( game.eatFx.x, game.eatFx.y );
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText( '200', cx, cy );
+  }
 }
 
 window.draw = draw;
